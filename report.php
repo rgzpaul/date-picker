@@ -51,7 +51,7 @@ $totalDates = count($counter);
   <link href="http://minisoft.it/cdn/icons/collection/idea.png" rel="shortcut icon" type="image/x-icon" />
   <link href="https://prgz.it/datePicker/webclip.png" rel="apple-touch-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -125,12 +125,12 @@ $totalDates = count($counter);
   <div class="max-w-4xl mx-auto">
     <div class="card bg-white p-8 rounded-2xl animate-fade-in">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 class="text-3xl font-bold text-indigo-700">
-          <i class="fas fa-chart-bar mr-2"></i>Report
+        <h1 class="text-3xl font-bold text-indigo-700 flex items-center">
+          <i data-lucide="bar-chart-2" class="w-8 h-8 mr-2"></i>Report
         </h1>
 
         <a href="index.php" class="btn bg-indigo-600 text-white px-4 py-2 rounded-lg inline-flex items-center justify-center w-full sm:w-auto">
-          <i class="fas fa-arrow-left mr-2"></i> Indietro
+          <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Indietro
         </a>
       </div>
 
@@ -138,25 +138,25 @@ $totalDates = count($counter);
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div class="hidden stats-card bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-6 text-white">
-            <div class="text-xl opacity-80 mb-1"><i class="fas fa-users mr-2"></i>Voti</div>
+            <div class="text-xl opacity-80 mb-1"><i data-lucide="users" class="w-5 h-5 mr-2 inline"></i>Voti</div>
             <div class="text-3xl font-bold"><?= $totalVotes ?></div>
           </div>
 
           <div class="stats-card bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
-            <div class="text-xl opacity-80 mb-1"><i class="fas fa-calendar-alt mr-2"></i>Date</div>
+            <div class="text-xl opacity-80 mb-1"><i data-lucide="calendar" class="w-5 h-5 mr-2 inline"></i>Date</div>
             <div class="text-3xl font-bold"><?= $totalDates ?></div>
           </div>
 
           <?php if ($mostPopularDate): ?>
             <div class="stats-card bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white">
-              <div class="text-xl opacity-80 mb-1"><i class="fas fa-star mr-2"></i>Data scelta</div>
+              <div class="text-xl opacity-80 mb-1"><i data-lucide="star" class="w-5 h-5 mr-2 inline"></i>Data scelta</div>
               <div class="text-3xl font-bold"><?= formatDateItalian($mostPopularDate) ?></div>
             </div>
           <?php endif; ?>
         </div>
 
         <h2 class="text-xl font-semibold text-gray-700 mb-4">
-          <i class="fas fa-list-ol mr-2"></i>Classifica
+          <i data-lucide="list-ordered" class="w-5 h-5 mr-2 inline"></i>Classifica
         </h2>
 
         <ul class="space-y-3">
@@ -200,7 +200,7 @@ $totalDates = count($counter);
         </ul>
       <?php else: ?>
         <div class="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-md flex items-center">
-          <i class="fas fa-exclamation-circle text-amber-500 text-3xl mr-4"></i>
+          <i data-lucide="alert-circle" class="w-8 h-8 text-amber-500 mr-4"></i>
           <div>
             <h3 class="text-xl font-semibold text-amber-800">Nessun dato disponibile</h3>
             <p class="text-amber-700">Non ci sono ancora date selezionate nel sistema.</p>
@@ -209,12 +209,13 @@ $totalDates = count($counter);
 
         <div class="mt-8 text-center">
           <a href="index.php" class="btn inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg">
-            <i class="fas fa-calendar-plus mr-2"></i> Seleziona Date
+            <i data-lucide="calendar-plus" class="w-5 h-5 mr-2 inline"></i> Seleziona Date
           </a>
         </div>
       <?php endif; ?>
     </div>
   </div>
+  <script>lucide.createIcons();</script>
 </body>
 
 </html>
