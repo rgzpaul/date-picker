@@ -1,5 +1,6 @@
 <?php
 $alreadySubmitted = isset($_COOKIE['already_submitted']);
+$errorMessage = '';
 
 // Configuration settings
 $maxDates = 6; // Maximum number of dates selectable - change this value to adjust the limit
@@ -19,16 +20,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
     }
 
     $data = json_decode(file_get_contents('db.json'), true) ?? [];
-    foreach ($datesArray as $date) {
-      $data[] = ['date' => trim($date), 'name' => $nome];
+
+    // Controlla se il nome esiste già
+    $existingNames = array_unique(array_column($data, 'name'));
+    $nomeNormalized = mb_strtolower($nome);
+    $nameExists = false;
+    foreach ($existingNames as $existingName) {
+      if (mb_strtolower($existingName) === $nomeNormalized) {
+        $nameExists = true;
+        break;
+      }
     }
-    file_put_contents('db.json', json_encode($data));
 
-    // Imposta il cookie per 1 settimana
-    setcookie('already_submitted', 'true', time() + (7 * 24 * 60 * 60));
+    if ($nameExists) {
+      $errorMessage = 'Questo nome è già stato utilizzato. Inserisci un nome diverso.';
+    } else {
+      foreach ($datesArray as $date) {
+        $data[] = ['date' => trim($date), 'name' => $nome];
+      }
+      file_put_contents('db.json', json_encode($data));
 
-    header('Location: report.php');
-    exit;
+      // Imposta il cookie per 1 settimana
+      setcookie('already_submitted', 'true', time() + (7 * 24 * 60 * 60));
+
+      header('Location: report.php');
+      exit;
+    }
   }
 }
 ?>
@@ -141,10 +158,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
     </h1>
 
     <?php if (!$alreadySubmitted): ?>
+      <?php if ($errorMessage): ?>
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 text-sm flex items-center">
+          <i data-lucide="alert-circle" class="w-4 h-4 mr-2 flex-shrink-0"></i>
+          <?= htmlspecialchars($errorMessage) ?>
+        </div>
+      <?php endif; ?>
+
       <form method="POST" class="space-y-4">
         <div>
           <label for="nome" class="block text-sm font-medium text-slate-700 mb-1">Il tuo nome</label>
-          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300">
+          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300<?= $errorMessage ? ' border-red-300' : '' ?>">
         </div>
 
         <div class="flex items-center justify-end mb-1">
