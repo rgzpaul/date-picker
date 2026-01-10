@@ -24,14 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($message): ?>
             <p class="text-slate-700 mb-4"><?= htmlspecialchars($message) ?></p>
             <a href="index.php" class="text-slate-600 hover:text-slate-800 underline">Back to home</a>
-        <?php else: ?>
+        <?php elseif (file_exists($dbFile)): ?>
             <p class="text-slate-700 mb-4">This will delete all saved data.</p>
-            <form method="POST" class="space-y-4">
+            <form method="POST">
                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
                     Reset Database
                 </button>
             </form>
-            <a href="index.php" class="inline-block mt-4 text-slate-600 hover:text-slate-800 underline text-sm">Cancel</a>
+        <?php else: ?>
+            <p class="text-slate-700 mb-4">No data to reset.</p>
+            <a href="index.php" class="text-slate-600 hover:text-slate-800 underline">Back to home</a>
         <?php endif; ?>
     </div>
 </body>
