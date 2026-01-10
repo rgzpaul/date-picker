@@ -44,95 +44,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
   <link href="http://minisoft.it/cdn/icons/collection/idea.png" rel="shortcut icon" type="image/x-icon" />
   <link href="https://prgz.it/datePicker/webclip.png" rel="apple-touch-icon" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
     body {
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8fafc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .card {
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
     }
 
     .btn {
-      transition: all 0.3s ease;
-    }
-
-    .btn:active {
-      transform: translateY(1px);
-    }
-
-    .date-tag {
-      animation: fadeIn 0.5s ease;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      transition: background-color 0.15s ease;
     }
 
     .flatpickr-calendar {
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
-      border-radius: 12px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+      border-radius: 8px !important;
+      border: 1px solid #e2e8f0 !important;
       overflow: hidden !important;
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
       z-index: 9999;
+      font-family: 'Inter', sans-serif !important;
     }
 
     .flatpickr-day.selected {
-      background: #4F46E5 !important;
-      border-color: #4F46E5 !important;
+      background: #334155 !important;
+      border-color: #334155 !important;
     }
 
-    /* Hide month dropdown and year input */
+    .flatpickr-day:hover {
+      background: #f1f5f9 !important;
+      border-color: #f1f5f9 !important;
+    }
+
+    .flatpickr-day.selected:hover {
+      background: #1e293b !important;
+      border-color: #1e293b !important;
+    }
+
     .flatpickr-current-month .flatpickr-monthDropdown-months,
     .flatpickr-current-month .numInputWrapper {
       display: none !important;
     }
 
-    /* Center the month text */
     .flatpickr-current-month {
       display: flex !important;
       justify-content: center !important;
       padding-top: 5px !important;
     }
 
-    /* Add custom month display */
     .custom-month-display {
-      font-size: 1.2rem;
-      font-weight: 600;
-      padding: 10px 0;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 0;
       text-align: center;
+      color: #334155;
     }
 
-    /* Mobile Optimizations */
     @media (max-width: 640px) {
       .card {
-        padding: 1.25rem !important;
-      }
-
-      h1 {
-        font-size: 1.5rem !important;
-      }
-
-      button,
-      .btn {
-        padding-top: 0.625rem !important;
-        padding-bottom: 0.625rem !important;
+        padding: 1.5rem !important;
       }
 
       .flatpickr-calendar {
@@ -144,46 +126,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4">
-  <div class="card bg-white p-8 rounded-2xl w-full max-w-md">
-    <h1 class="text-3xl font-bold mb-6 text-center text-indigo-700">
+  <div class="card bg-white p-8 rounded-lg w-full max-w-md">
+    <h1 class="text-xl font-semibold mb-6 text-slate-800 flex items-center justify-center">
       <?php if ($alreadySubmitted): ?>
-        <span class="text-pink-600"><i class="fas fa-check-circle mr-2"></i>Hai già votato</span>
+        <i data-lucide="check-circle" class="w-5 h-5 mr-2 text-slate-500"></i>Hai già votato
       <?php else: ?>
-        <i class="far fa-calendar-alt mr-2"></i>Seleziona date
+        <i data-lucide="calendar" class="w-5 h-5 mr-2 text-slate-500"></i>Seleziona date
       <?php endif; ?>
     </h1>
 
     <?php if (!$alreadySubmitted): ?>
-      <form method="POST" class="space-y-6">
-        <div class="flex items-center justify-end mb-2">
-          <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-            <i class="fas fa-info-circle mr-1"></i>Massimo <?= $maxDates ?> date
+      <form method="POST" class="space-y-4">
+        <div class="flex items-center justify-end mb-1">
+          <span class="text-slate-400 text-xs font-medium">
+            Max <?= $maxDates ?> date
           </span>
         </div>
 
-        <div id="selected-dates" class="flex flex-wrap gap-2 min-h-[60px] p-3 bg-gray-50 rounded-lg border border-gray-200"></div>
+        <div id="selected-dates" class="flex flex-wrap gap-2 min-h-[56px] p-3 bg-slate-50 rounded-md border border-slate-200"></div>
 
         <input type="hidden" id="dates" name="dates" required>
 
-        <button type="button" id="open-calendar" class="btn w-full bg-indigo-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
-          <i class="far fa-calendar-plus mr-2"></i> Scegli date
+        <button type="button" id="open-calendar" class="btn w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium flex items-center justify-center">
+          <i data-lucide="calendar-plus" class="w-4 h-4 mr-2"></i> Scegli date
         </button>
 
-        <button type="submit" class="btn w-full bg-emerald-600 text-white px-6 py-3 rounded-lg flex items-center justify-center">
-          <i class="fas fa-save mr-2"></i> Invia selezione
+        <button type="submit" class="btn w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-md text-sm font-medium flex items-center justify-center border border-slate-200">
+          <i data-lucide="save" class="w-4 h-4 mr-2"></i> Invia selezione
         </button>
       </form>
     <?php else: ?>
-      <div class="bg-pink-50 border-l-4 border-pink-500 p-4 mb-6 rounded-md">
-        <p class="text-pink-700">Hai già inviato la tua selezione. Puoi visualizzare il report delle date più selezionate.</p>
+      <div class="bg-slate-50 border border-slate-200 p-4 mb-4 rounded-md">
+        <p class="text-slate-600 text-sm">Hai già inviato la tua selezione. Puoi visualizzare il report delle date più selezionate.</p>
       </div>
 
-      <a href="report.php" class="btn block text-center w-full bg-indigo-600 text-white px-6 py-3 rounded-lg">
-        <i class="fas fa-chart-bar mr-2"></i> Vai al report
+      <a href="report.php" class="btn block text-center w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
+        <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 inline"></i> Vai al report
       </a>
     <?php endif; ?>
 
-    <div class="mt-6 text-center text-gray-500 text-sm">
+    <div class="mt-6 text-center text-slate-400 text-xs">
       <p>Seleziona le date che preferisci prima che mi incazzo sul serio.</p>
     </div>
   </div>
@@ -247,11 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
           selectedDates.forEach(date => {
             const tag = document.createElement('span');
-            tag.className = 'date-tag bg-indigo-100 text-indigo-800 text-sm font-medium px-3 py-1.5 rounded-full flex items-center';
-
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-calendar-day mr-1.5';
-            tag.appendChild(icon);
+            tag.className = 'date-tag bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-1 rounded flex items-center';
 
             const text = document.createTextNode(formatDateItalian(date));
             tag.appendChild(text);
@@ -269,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
           });
 
           if (selectedDates.length === 0) {
-            selectedDatesContainer.innerHTML = '<p class="text-gray-400 text-center w-full my-2"><i class="far fa-calendar mr-1"></i> Nessuna data selezionata</p>';
+            selectedDatesContainer.innerHTML = '<p class="text-slate-400 text-center w-full my-2 text-xs">Nessuna data selezionata</p>';
           }
 
           datesInput.value = formattedDates.join(',');
@@ -320,6 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       });
     </script>
   <?php endif; ?>
+  <script>lucide.createIcons();</script>
 </body>
 
 </html>
