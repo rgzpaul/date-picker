@@ -52,57 +52,27 @@ $totalDates = count($counter);
   <link href="https://prgz.it/datePicker/webclip.png" rel="apple-touch-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8fafc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     .card {
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
     }
 
     .btn {
-      transition: all 0.3s ease;
+      transition: background-color 0.15s ease;
     }
 
-    .btn:active {
-      transform: translateY(1px);
-    }
-
-    .badge {
-      position: relative;
-      overflow: hidden;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-fade-in {
-      animation: fadeIn 0.6s ease forwards;
-    }
-
-    /* Mobile Optimizations */
     @media (max-width: 768px) {
       .card {
-        padding: 1.25rem !important;
-      }
-
-      h1 {
-        font-size: 1.5rem !important;
-      }
-
-      h2 {
-        font-size: 1.25rem !important;
+        padding: 1.5rem !important;
       }
 
       .stats-card {
@@ -112,104 +82,71 @@ $totalDates = count($counter);
       .date-item {
         padding: 0.75rem !important;
       }
-
-      .badge {
-        font-size: 0.75rem !important;
-        padding: 0.25rem 0.75rem !important;
-      }
     }
   </style>
 </head>
 
 <body class="min-h-screen py-12 px-4">
-  <div class="max-w-4xl mx-auto">
-    <div class="card bg-white p-8 rounded-2xl animate-fade-in">
+  <div class="max-w-2xl mx-auto">
+    <div class="card bg-white p-8 rounded-lg">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <h1 class="text-3xl font-bold text-indigo-700 flex items-center">
-          <i data-lucide="bar-chart-2" class="w-8 h-8 mr-2"></i>Report
+        <h1 class="text-xl font-semibold text-slate-800 flex items-center">
+          <i data-lucide="bar-chart-2" class="w-5 h-5 mr-2 text-slate-500"></i>Report
         </h1>
 
-        <a href="index.php" class="btn bg-indigo-600 text-white px-4 py-2 rounded-lg inline-flex items-center justify-center w-full sm:w-auto">
+        <a href="index.php" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
           <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Indietro
         </a>
       </div>
 
       <?php if (!empty($counter)): ?>
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div class="hidden stats-card bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-6 text-white">
-            <div class="text-xl opacity-80 mb-1"><i data-lucide="users" class="w-5 h-5 mr-2 inline"></i>Voti</div>
-            <div class="text-3xl font-bold"><?= $totalVotes ?></div>
-          </div>
-
-          <div class="stats-card bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
-            <div class="text-xl opacity-80 mb-1"><i data-lucide="calendar" class="w-5 h-5 mr-2 inline"></i>Date</div>
-            <div class="text-3xl font-bold"><?= $totalDates ?></div>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
+            <div class="text-xs text-slate-500 mb-1">Date proposte</div>
+            <div class="text-2xl font-semibold text-slate-800"><?= $totalDates ?></div>
           </div>
 
           <?php if ($mostPopularDate): ?>
-            <div class="stats-card bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white">
-              <div class="text-xl opacity-80 mb-1"><i data-lucide="star" class="w-5 h-5 mr-2 inline"></i>Data scelta</div>
-              <div class="text-3xl font-bold"><?= formatDateItalian($mostPopularDate) ?></div>
+            <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
+              <div class="text-xs text-slate-500 mb-1">Data scelta</div>
+              <div class="text-2xl font-semibold text-slate-800"><?= formatDateItalian($mostPopularDate) ?></div>
             </div>
           <?php endif; ?>
         </div>
 
-        <h2 class="text-xl font-semibold text-gray-700 mb-4">
-          <i data-lucide="list-ordered" class="w-5 h-5 mr-2 inline"></i>Classifica
+        <h2 class="text-sm font-medium text-slate-500 mb-3 uppercase tracking-wide">
+          Classifica
         </h2>
 
-        <ul class="space-y-3">
+        <ul class="space-y-2">
           <?php foreach ($counter as $date => $count): ?>
             <?php
-            // Calcola la percentuale per la progress bar
             $percentage = ($count / $totalVotes) * 100;
-
-            // Determina il colore in base alla popolarità
-            $bgColor = 'bg-indigo-100 text-indigo-800';
-            $barColor = 'bg-indigo-500';
-
-            if ($percentage > 75) {
-              $bgColor = 'bg-emerald-100 text-emerald-800';
-              $barColor = 'bg-emerald-500';
-            } elseif ($percentage > 50) {
-              $bgColor = 'bg-blue-100 text-blue-800';
-              $barColor = 'bg-blue-500';
-            } elseif ($percentage > 25) {
-              $bgColor = 'bg-amber-100 text-amber-800';
-              $barColor = 'bg-amber-500';
-            }
             ?>
-            <li class="date-item p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200 transition duration-200">
+            <li class="date-item p-3 bg-slate-50 rounded-md border border-slate-200">
               <div class="flex justify-between items-center mb-2">
                 <div class="flex items-center">
-                  <span class="badge <?= $bgColor ?> text-sm font-medium px-4 py-1.5 rounded-full mr-3">
+                  <span class="text-sm font-medium text-slate-700 mr-3">
                     <?= htmlspecialchars(formatDateItalian($date)) ?>
                   </span>
-                  <span class="font-semibold text-gray-700">
+                  <span class="text-xs text-slate-500">
                     <?= $count ?> vot<?= ($count == 1) ? 'o' : 'i' ?>
                   </span>
                 </div>
-                <span class="text-sm text-gray-500"><?= number_format($percentage, 1) ?>%</span>
+                <span class="text-xs text-slate-400"><?= number_format($percentage, 0) ?>%</span>
               </div>
-              <div class="w-full bg-gray-200 rounded-full h-2.5">
-                <div class="<?= $barColor ?> h-2.5 rounded-full" style="width: <?= $percentage ?>%"></div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5">
+                <div class="bg-slate-600 h-1.5 rounded-full" style="width: <?= $percentage ?>%"></div>
               </div>
             </li>
           <?php endforeach; ?>
         </ul>
       <?php else: ?>
-        <div class="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-md flex items-center">
-          <i data-lucide="alert-circle" class="w-8 h-8 text-amber-500 mr-4"></i>
-          <div>
-            <h3 class="text-xl font-semibold text-amber-800">Nessun dato disponibile</h3>
-            <p class="text-amber-700">Non ci sono ancora date selezionate nel sistema.</p>
-          </div>
-        </div>
-
-        <div class="mt-8 text-center">
-          <a href="index.php" class="btn inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg">
-            <i data-lucide="calendar-plus" class="w-5 h-5 mr-2 inline"></i> Seleziona Date
+        <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
+          <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
+          <a href="index.php" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-md text-sm font-medium">
+            Seleziona Date
           </a>
         </div>
       <?php endif; ?>
