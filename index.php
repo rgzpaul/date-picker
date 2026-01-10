@@ -134,13 +134,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       color: #334155;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 480px) {
       .card {
         padding: 1.5rem !important;
       }
 
       .flatpickr-calendar {
-        width: auto !important;
+        width: 90% !important;
       }
     }
   </style>
