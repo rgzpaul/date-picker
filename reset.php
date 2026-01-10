@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="text-slate-700 mb-4">This will delete all saved data.</p>
             <form method="POST">
                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
-                    Reset Database
+                    Reset database
                 </button>
             </form>
         <?php else: ?>

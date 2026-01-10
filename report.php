@@ -181,7 +181,7 @@ $totalDates = count($counter);
         <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
           <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
           <a href="index.php" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-md text-sm font-medium">
-            Seleziona Date
+            Seleziona date
           </a>
         </div>
       <?php endif; ?>
