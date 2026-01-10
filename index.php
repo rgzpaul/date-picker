@@ -40,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       }
       file_put_contents('db.json', json_encode($data));
 
-      // Imposta il cookie per 1 settimana
-      setcookie('already_submitted', 'true', time() + (7 * 24 * 60 * 60));
+      // Imposta il cookie per 21 giorni
+      setcookie('already_submitted', 'true', strtotime('+21 days'));
 
       header('Location: report.php');
       exit;
