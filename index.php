@@ -78,6 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       font-family: 'Inter', sans-serif !important;
     }
 
+    .flatpickr-innerContainer {
+      overflow-x: auto;
+    }
+
     .flatpickr-day.selected {
       background: #334155 !important;
       border-color: #334155 !important;
@@ -119,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
       .flatpickr-calendar {
         width: 90% !important;
-        max-width: 300px !important;
+        max-width: 310px !important;
       }
     }
   </style>
