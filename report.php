@@ -2,11 +2,37 @@
 // Legge le date salvate
 $data = json_decode(file_get_contents('db.json'), true) ?? [];
 
-// Conta quante volte ogni data è stata selezionata
-$counter = array_count_values($data);
+// Raggruppa per data e raccoglie i nomi
+$dateGroups = [];
+foreach ($data as $entry) {
+  // Supporta sia il nuovo formato (array con date e name) che il vecchio (solo stringa)
+  if (is_array($entry) && isset($entry['date'])) {
+    $date = $entry['date'];
+    $name = $entry['name'] ?? 'Anonimo';
+  } else {
+    $date = $entry;
+    $name = 'Anonimo';
+  }
+
+  if (!isset($dateGroups[$date])) {
+    $dateGroups[$date] = ['count' => 0, 'names' => []];
+  }
+  $dateGroups[$date]['count']++;
+  if (!in_array($name, $dateGroups[$date]['names'])) {
+    $dateGroups[$date]['names'][] = $name;
+  }
+}
 
 // Ordina per conteggio decrescente
-arsort($counter);
+uasort($dateGroups, function($a, $b) {
+  return $b['count'] - $a['count'];
+});
+
+// Crea il counter per compatibilita
+$counter = [];
+foreach ($dateGroups as $date => $info) {
+  $counter[$date] = $info['count'];
+}
 
 // Funzione per formattare la data come "LUN 21/08"
 function formatDateItalian($dateStr)
@@ -120,8 +146,10 @@ $totalDates = count($counter);
         </h2>
 
         <ul class="space-y-2">
-          <?php foreach ($counter as $date => $count): ?>
+          <?php foreach ($dateGroups as $date => $info): ?>
             <?php
+            $count = $info['count'];
+            $names = $info['names'];
             $percentage = ($count / $totalVotes) * 100;
             ?>
             <li class="date-item p-3 bg-slate-50 rounded-md border border-slate-200">
@@ -136,8 +164,15 @@ $totalDates = count($counter);
                 </div>
                 <span class="text-xs text-slate-400"><?= number_format($percentage, 0) ?>%</span>
               </div>
-              <div class="w-full bg-slate-200 rounded-full h-1.5">
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mb-2">
                 <div class="bg-slate-600 h-1.5 rounded-full" style="width: <?= $percentage ?>%"></div>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <?php foreach ($names as $name): ?>
+                  <span class="inline-flex items-center text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                    <i data-lucide="user" class="w-3 h-3 mr-1"></i><?= htmlspecialchars($name) ?>
+                  </span>
+                <?php endforeach; ?>
               </div>
             </li>
           <?php endforeach; ?>

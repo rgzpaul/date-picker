@@ -7,8 +7,9 @@ $maxDates = 6; // Maximum number of dates selectable - change this value to adju
 // Salvataggio dei dati se il form è inviato
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
   $dates = $_POST['dates'] ?? [];
+  $nome = trim($_POST['nome'] ?? '');
 
-  if (!empty($dates)) {
+  if (!empty($dates) && !empty($nome)) {
     $datesArray = explode(',', $dates);
     $datesArray = array_filter($datesArray);
 
@@ -19,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
     $data = json_decode(file_get_contents('db.json'), true) ?? [];
     foreach ($datesArray as $date) {
-      $data[] = trim($date);
+      $data[] = ['date' => trim($date), 'name' => $nome];
     }
     file_put_contents('db.json', json_encode($data));
 
@@ -141,6 +142,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
     <?php if (!$alreadySubmitted): ?>
       <form method="POST" class="space-y-4">
+        <div>
+          <label for="nome" class="block text-sm font-medium text-slate-700 mb-1">Il tuo nome</label>
+          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300">
+        </div>
+
         <div class="flex items-center justify-end mb-1">
           <span class="text-slate-400 text-xs font-medium">
             Max <?= $maxDates ?> date
