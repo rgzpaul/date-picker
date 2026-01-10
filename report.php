@@ -40,26 +40,6 @@ $mostPopularDate = !empty($counter) ? key($counter) : null;
 $totalVotes = array_sum($counter);
 $totalDates = count($counter);
 
-// Prepara dati per il grafico
-$chartData = [];
-$colors = [
-  'rgba(79, 70, 229, 0.8)', // Indigo
-  'rgba(16, 185, 129, 0.8)', // Emerald
-  'rgba(245, 158, 11, 0.8)', // Amber
-  'rgba(239, 68, 68, 0.8)',  // Red
-  'rgba(99, 102, 241, 0.8)'  // Blue
-];
-
-$i = 0;
-foreach ($counter as $date => $count) {
-  $chartData[] = [
-    'date' => formatDateItalian($date),
-    'count' => $count,
-    'color' => $colors[$i % count($colors)]
-  ];
-  $i++;
-  if ($i >= 5) break; // Limita a 3 date per il grafico
-}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -71,7 +51,6 @@ foreach ($counter as $date => $count) {
   <link href="http://minisoft.it/cdn/icons/collection/idea.png" rel="shortcut icon" type="image/x-icon" />
   <link href="https://prgz.it/datePicker/webclip.png" rel="apple-touch-icon" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     body {
@@ -112,11 +91,6 @@ foreach ($counter as $date => $count) {
       animation: fadeIn 0.6s ease forwards;
     }
 
-    .chart-container {
-      opacity: 0;
-      animation: fadeIn 0.8s ease 0.3s forwards;
-    }
-
     /* Mobile Optimizations */
     @media (max-width: 768px) {
       .card {
@@ -142,10 +116,6 @@ foreach ($counter as $date => $count) {
       .badge {
         font-size: 0.75rem !important;
         padding: 0.25rem 0.75rem !important;
-      }
-
-      canvas {
-        height: 200px !important;
       }
     }
   </style>
@@ -183,10 +153,6 @@ foreach ($counter as $date => $count) {
               <div class="text-3xl font-bold"><?= formatDateItalian($mostPopularDate) ?></div>
             </div>
           <?php endif; ?>
-        </div>
-
-        <div class="chart-container bg-white p-4 rounded-xl shadow-sm mb-8">
-          <canvas id="dateChart" width="400" height="200"></canvas>
         </div>
 
         <h2 class="text-xl font-semibold text-gray-700 mb-4">
@@ -249,93 +215,6 @@ foreach ($counter as $date => $count) {
       <?php endif; ?>
     </div>
   </div>
-
-  <?php if (!empty($chartData)): ?>
-    <script>
-      // Prepara i dati per il grafico
-      const chartData = <?= json_encode($chartData) ?>;
-
-      // Estrae le etichette e i dati per il grafico
-      const labels = chartData.map(item => item.date);
-      const data = chartData.map(item => item.count);
-      const backgroundColors = chartData.map(item => item.color);
-
-      // Crea il grafico
-      const ctx = document.getElementById('dateChart').getContext('2d');
-      const dateChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Numero di selezioni',
-            data: data,
-            backgroundColor: backgroundColors,
-            borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
-            borderWidth: 1,
-            borderRadius: 6,
-            barThickness: 30,
-            maxBarThickness: 40
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: 'rgba(49, 46, 129, 0.9)',
-              titleFont: {
-                size: 14,
-                weight: 'bold'
-              },
-              bodyFont: {
-                size: 13
-              },
-              padding: 12,
-              displayColors: false,
-              callbacks: {
-                label: function(context) {
-                  const value = context.raw;
-                  return `${value} vot${value === 1 ? 'o' : 'i'} (${((value / <?= $totalVotes ?>) * 100).toFixed(1)}%)`;
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: {
-                display: true,
-                color: 'rgba(0, 0, 0, 0.05)'
-              },
-              ticks: {
-                precision: 0,
-                font: {
-                  size: 12
-                }
-              }
-            },
-            x: {
-              grid: {
-                display: false
-              },
-              ticks: {
-                font: {
-                  size: 12,
-                  weight: 'bold'
-                }
-              }
-            }
-          },
-          animation: {
-            duration: 1500
-          }
-        }
-      });
-    </script>
-  <?php endif; ?>
 </body>
 
 </html>
