@@ -134,16 +134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       text-align: center;
       color: #334155;
     }
-
-    @media (max-width: 360px) {
-      .card {
-        padding: 1.5rem !important;
-      }
-
-      .flatpickr-calendar {
-        width: 90% !important;
-      }
-    }
   </style>
 </head>
 
