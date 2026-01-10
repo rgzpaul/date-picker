@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
     .flatpickr-calendar {
       width: auto !important;
+      max-width: 90% !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
       border-radius: 8px !important;
       border: 1px solid #e2e8f0 !important;
