@@ -83,7 +83,6 @@ $totalDates = count($counter);
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     body {
-      background: #f8fafc;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
@@ -112,7 +111,7 @@ $totalDates = count($counter);
   </style>
 </head>
 
-<body class="min-h-screen py-12 px-4">
+<body class="min-h-screen py-12 px-4 bg-slate-50">
   <div class="max-w-2xl mx-auto">
     <div class="card bg-white p-8 rounded-lg">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">

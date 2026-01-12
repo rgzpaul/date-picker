@@ -71,7 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
   <style>
     body {
-      background: #f8fafc;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
@@ -138,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
   </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 bg-slate-50">
   <div class="card bg-white p-8 rounded-lg w-full max-w-md">
     <h1 class="text-xl font-semibold mb-6 text-slate-800 flex items-center justify-center">
       <?php if ($alreadySubmitted): ?>
