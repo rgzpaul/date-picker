@@ -21,4 +21,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: 21
-          server-dir: /prgz.it/www/datePicker/
+          server-dir: ${{ secrets.FTP_PATH }}
