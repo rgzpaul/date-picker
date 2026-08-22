@@ -1,5 +1,10 @@
 <?php
-$alreadySubmitted = isset($_COOKIE['already_submitted']);
+require __DIR__ . '/event.php';
+$event = getEventOrFail();
+$dbFile = eventDbFile($event);
+$cookieName = eventCookieName($event);
+
+$alreadySubmitted = isset($_COOKIE[$cookieName]);
 $errorMessage = '';
 
 // Configuration settings
@@ -19,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       $datesArray = array_slice($datesArray, -$maxDates);
     }
 
-    $data = json_decode(file_get_contents('db.json'), true) ?? [];
+    $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
 
     // Controlla se il nome esiste già
     $existingNames = array_unique(array_column($data, 'name'));
@@ -38,12 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       foreach ($datesArray as $date) {
         $data[] = ['date' => trim($date), 'name' => $nome];
       }
-      file_put_contents('db.json', json_encode($data));
+      file_put_contents($dbFile, json_encode($data));
 
       // Imposta il cookie per 21 giorni
-      setcookie('already_submitted', 'true', strtotime('+21 days'));
+      setcookie($cookieName, 'true', strtotime('+21 days'));
 
-      header('Location: report.php');
+      header('Location: report.php?event=' . urlencode($event));
       exit;
     }
   }
@@ -139,13 +144,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
 <body class="min-h-screen flex items-center justify-center p-4 bg-slate-50">
   <div class="card bg-white p-8 rounded-lg w-full max-w-md">
-    <h1 class="text-xl font-semibold mb-6 text-slate-800 flex items-center justify-center">
+    <h1 class="text-xl font-semibold mb-2 text-slate-800 flex items-center justify-center">
       <?php if ($alreadySubmitted): ?>
         <i data-lucide="check-circle" class="w-5 h-5 mr-2 text-slate-500"></i>Hai già votato
       <?php else: ?>
         <i data-lucide="calendar" class="w-5 h-5 mr-2 text-slate-500"></i>Seleziona date
       <?php endif; ?>
     </h1>
+
+    <div class="flex justify-center mb-6">
+      <span class="inline-flex items-center bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded border border-slate-200">
+        <i data-lucide="tag" class="w-3 h-3 mr-1.5"></i><?= htmlspecialchars($event) ?>
+      </span>
+    </div>
 
     <?php if (!$alreadySubmitted): ?>
       <?php if ($errorMessage): ?>
@@ -184,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
         <p class="text-slate-600 text-sm">Hai già inviato la tua selezione. Puoi visualizzare il report delle date più selezionate.</p>
       </div>
 
-      <a href="report.php" class="btn block text-center w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
+      <a href="report.php?event=<?= urlencode($event) ?>" class="btn block text-center w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
         <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 inline"></i> Vai al report
       </a>
     <?php endif; ?>

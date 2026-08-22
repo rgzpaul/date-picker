@@ -1,6 +1,10 @@
 <?php
-// Legge le date salvate
-$data = json_decode(file_get_contents('db.json'), true) ?? [];
+require __DIR__ . '/event.php';
+$event = getEventOrFail();
+$dbFile = eventDbFile($event);
+
+// Legge le date salvate per l'evento
+$data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
 
 // Raggruppa per data e raccoglie i nomi
 $dateGroups = [];
@@ -117,9 +121,12 @@ $totalDates = count($counter);
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <h1 class="text-xl font-semibold text-slate-800 flex items-center">
           <i data-lucide="bar-chart-2" class="w-5 h-5 mr-2 text-slate-500"></i>Report
+          <span class="ml-3 inline-flex items-center bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded border border-slate-200">
+            <i data-lucide="tag" class="w-3 h-3 mr-1.5"></i><?= htmlspecialchars($event) ?>
+          </span>
         </h1>
 
-        <a href="index.php" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
+        <a href="index.php?event=<?= urlencode($event) ?>" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
           <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Indietro
         </a>
       </div>
@@ -179,7 +186,7 @@ $totalDates = count($counter);
       <?php else: ?>
         <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
           <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
-          <a href="index.php" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-md text-sm font-medium">
+          <a href="index.php?event=<?= urlencode($event) ?>" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-md text-sm font-medium">
             Seleziona date
           </a>
         </div>
