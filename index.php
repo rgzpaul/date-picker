@@ -55,10 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adesso basta</title>
-  <meta property="og:title" content="Adesso basta">
-  <meta name="description" content="Mi sto incazzando">
-  <meta property="og:description" content="Mi sto incazzando">
+  <title>Selezione date</title>
+  <meta property="og:title" content="Selezione date">
+  <meta name="description" content="Indica le date in cui sei disponibile e invia la tua selezione.">
+  <meta property="og:description" content="Indica le date in cui sei disponibile e invia la tua selezione.">
   <link href="http://minisoft.it/cdn/icons/collection/idea.png" rel="shortcut icon" type="image/x-icon" />
   <link href="https://prgz.it/datePicker/webclip.png" rel="apple-touch-icon" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
