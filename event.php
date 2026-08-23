@@ -8,9 +8,10 @@ function getEventOrFail()
 {
   $event = trim($_GET['event'] ?? '');
 
-  // Solo lettere, numeri, trattini e underscore: il nome viene usato anche come nome file
+  // Solo lettere, numeri, trattini e underscore: il nome viene usato anche come nome file.
+  // Minuscolo per rendere l'evento case-insensitive (stesso file e cookie per Cena/cena).
   if ($event !== '' && preg_match('/^[A-Za-z0-9_-]{1,50}$/', $event)) {
-    return $event;
+    return strtolower($event);
   }
 
   http_response_code(400);
