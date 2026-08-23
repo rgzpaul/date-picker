@@ -115,7 +115,7 @@ $totalDates = count($counter);
   </style>
 </head>
 
-<body class="min-h-screen py-12 px-4 bg-slate-50">
+<body class="min-h-[100dvh] py-12 px-4 bg-slate-50">
   <div class="max-w-2xl mx-auto">
     <div class="card bg-white p-8 rounded-lg">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">

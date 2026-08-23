@@ -40,7 +40,7 @@ function getEventOrFail()
   </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+<body class="min-h-[100dvh] flex items-center justify-center p-4 bg-slate-50">
   <div class="card bg-white p-8 rounded-lg w-full max-w-md text-center">
     <h1 class="text-xl font-semibold mb-4 text-slate-800 flex items-center justify-center">
       <i data-lucide="alert-circle" class="w-5 h-5 mr-2 text-red-500"></i>Evento non specificato
