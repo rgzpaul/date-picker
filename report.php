@@ -142,18 +142,18 @@ $totalVoters = count($voterNames);
       <?php if (!empty($counter)): ?>
         <!-- Stats Cards -->
         <div class="grid grid-cols-2 gap-3 mb-6">
-          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
+          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
             <div class="text-xs text-slate-500 mb-1">Votanti</div>
             <div class="text-lg font-semibold text-slate-800"><?= $totalVoters ?></div>
           </div>
 
-          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
+          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
             <div class="text-xs text-slate-500 mb-1">Date proposte</div>
             <div class="text-lg font-semibold text-slate-800"><?= $totalDates ?></div>
           </div>
 
           <?php if ($mostPopularDate): ?>
-            <div class="stats-card col-span-2 bg-slate-50 border border-slate-200 rounded-md p-4">
+            <div class="stats-card col-span-2 bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
               <div class="text-xs text-slate-500 mb-1">Data scelta</div>
               <div class="text-lg font-semibold text-slate-800"><?= formatDateItalian($mostPopularDate) ?></div>
             </div>
