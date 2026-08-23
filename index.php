@@ -200,7 +200,7 @@ if ($isChanging && $submittedName !== '') {
       </form>
     <?php else: ?>
       <div class="bg-slate-50 border border-slate-200 p-4 mb-4 rounded-md">
-        <p class="text-slate-600 text-sm">Hai già inviato la tua selezione<?= $submittedName !== '' ? ' come "' . htmlspecialchars($submittedName) . '"' : '' ?>. Puoi modificarla oppure visualizzare il report delle date più selezionate.</p>
+        <p class="text-slate-600 text-sm"><?= $submittedName !== '' ? htmlspecialchars($submittedName) . ', hai' : 'Hai' ?> già inviato la tua selezione. Puoi modificarla oppure visualizzare il report delle date più selezionate.</p>
       </div>
 
       <div class="space-y-4">
