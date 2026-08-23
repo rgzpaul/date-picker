@@ -126,7 +126,7 @@ $totalDates = count($counter);
           </span>
         </h1>
 
-        <a href="index.php?event=<?= urlencode($event) ?>" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
+        <a href="index.php?event=<?= urlencode($event) ?>" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
           <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Indietro
         </a>
       </div>
@@ -186,7 +186,7 @@ $totalDates = count($counter);
       <?php else: ?>
         <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
           <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
-          <a href="index.php?event=<?= urlencode($event) ?>" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-md text-sm font-medium">
+          <a href="index.php?event=<?= urlencode($event) ?>" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
             Seleziona date
           </a>
         </div>

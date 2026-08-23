@@ -110,10 +110,14 @@ function eventCookieName($event)
 function eventSubmittedName($event)
 {
   $target = eventCookieName($event);
+  $legacyFound = null;
   foreach ($_COOKIE as $name => $value) {
     if (strtolower($name) === $target) {
-      return $value === 'true' ? '' : $value;
+      if ($value !== 'true') {
+        return $value;
+      }
+      $legacyFound = '';
     }
   }
-  return null;
+  return $legacyFound;
 }

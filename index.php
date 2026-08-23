@@ -50,6 +50,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
   }
 }
+
+// In caso di cambio voto, date già votate da precaricare nel calendario
+// (solo odierne o future: le passate non sono più selezionabili)
+$existingDates = [];
+if ($isChanging && $submittedName !== '') {
+  $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
+  $target = mb_strtolower($submittedName);
+  foreach ($data as $entry) {
+    if (is_array($entry) && isset($entry['date']) && mb_strtolower($entry['name'] ?? '') === $target) {
+      $timestamp = strtotime($entry['date']);
+      if ($timestamp !== false && $timestamp >= strtotime('today')) {
+        $existingDates[] = $entry['date'];
+      }
+    }
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -232,6 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       const calendar = flatpickr(fakeInput, {
         mode: 'multiple',
         dateFormat: 'Y-m-d',
+        defaultDate: <?= json_encode($existingDates) ?>,
         minDate: 'today',
         showMonths: 1,
         animate: true,
@@ -247,8 +264,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             longhand: mesiItaliani
           }
         },
-        onChange: function(selectedDates) {
-          const selectedDatesContainer = document.getElementById('selected-dates');
+        onChange: syncSelection,
+        onMonthChange: function(selectedDates, dateStr, instance) {
+          updateMonthDisplay(instance);
+        },
+        onReady: function(selectedDates, dateStr, instance) {
+          updateMonthDisplay(instance);
+        }
+      });
+
+      // Aggiorna i tag delle date scelte e il campo nascosto del form
+      function syncSelection(selectedDates) {
+        const selectedDatesContainer = document.getElementById('selected-dates');
           selectedDatesContainer.innerHTML = '';
 
           const datesInput = document.getElementById('dates');
@@ -286,16 +313,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           }
 
           datesInput.value = formattedDates.join(',');
-        },
-        onMonthChange: function(selectedDates, dateStr, instance) {
-          // Use a different approach to display the month name
-          updateMonthDisplay(instance);
-        },
-        onReady: function(selectedDates, dateStr, instance) {
-          // Initial month display update
-          updateMonthDisplay(instance);
-        }
-      });
+      }
+
+      // Mostra subito le date precaricate (cambio voto) o il placeholder
+      syncSelection(calendar.selectedDates);
 
       // Helper function to update the month display
       function updateMonthDisplay(instance) {
