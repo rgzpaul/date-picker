@@ -8,6 +8,9 @@ $submittedName = eventSubmittedName($event);
 $alreadySubmitted = $submittedName !== null;
 $isChanging = $alreadySubmitted && isset($_GET['modifica']);
 $showForm = !$alreadySubmitted || $isChanging;
+// In modifica l'identità è fissata dal cookie: il nome non si cambia
+// (resta libero solo per i cookie di vecchio tipo che non memorizzavano il nome)
+$nomeLocked = $isChanging && $submittedName !== '';
 
 // Configuration settings
 $maxDates = 6; // Maximum number of dates selectable - change this value to adjust the limit
@@ -177,7 +180,7 @@ if ($isChanging && $submittedName !== '') {
       <form method="POST" class="space-y-4">
         <div>
           <label for="nome" class="block text-sm font-medium text-slate-700 mb-1">Il tuo nome</label>
-          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($_POST['nome'] ?? $submittedName ?? '') ?>" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300">
+          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($nomeLocked ? $submittedName : ($_POST['nome'] ?? $submittedName ?? '')) ?>"<?= $nomeLocked ? ' readonly' : '' ?> class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm placeholder-slate-400 focus:outline-none<?= $nomeLocked ? ' text-slate-500 cursor-not-allowed' : ' text-slate-700 focus:ring-2 focus:ring-slate-300 focus:border-slate-300' ?>">
         </div>
 
         <div class="flex items-center justify-end mb-1">
