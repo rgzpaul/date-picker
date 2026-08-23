@@ -70,6 +70,14 @@ $mostPopularDate = !empty($counter) ? key($counter) : null;
 $totalVotes = array_sum($counter);
 $totalDates = count($counter);
 
+// Numero di votanti (nomi distinti, case-insensitive)
+$voterNames = [];
+foreach ($data as $entry) {
+  $name = is_array($entry) ? ($entry['name'] ?? 'Anonimo') : 'Anonimo';
+  $voterNames[mb_strtolower($name)] = true;
+}
+$totalVoters = count($voterNames);
+
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -133,16 +141,21 @@ $totalDates = count($counter);
 
       <?php if (!empty($counter)): ?>
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="grid grid-cols-3 gap-3 mb-6">
+          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
+            <div class="text-xs text-slate-500 mb-1">Votanti</div>
+            <div class="text-lg font-semibold text-slate-800"><?= $totalVoters ?></div>
+          </div>
+
           <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
             <div class="text-xs text-slate-500 mb-1">Date proposte</div>
-            <div class="text-2xl font-semibold text-slate-800"><?= $totalDates ?></div>
+            <div class="text-lg font-semibold text-slate-800"><?= $totalDates ?></div>
           </div>
 
           <?php if ($mostPopularDate): ?>
             <div class="stats-card bg-slate-50 border border-slate-200 rounded-md p-4">
               <div class="text-xs text-slate-500 mb-1">Data scelta</div>
-              <div class="text-2xl font-semibold text-slate-800"><?= formatDateItalian($mostPopularDate) ?></div>
+              <div class="text-lg font-semibold text-slate-800"><?= formatDateItalian($mostPopularDate) ?></div>
             </div>
           <?php endif; ?>
         </div>
