@@ -200,9 +200,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       </a>
     <?php endif; ?>
 
-    <div class="mt-6 text-center text-slate-400 text-xs">
-      <p>Seleziona le date che preferisci prima che mi incazzo sul serio.</p>
-    </div>
+    <?php if (!$alreadySubmitted): ?>
+      <div class="mt-6 text-center text-slate-400 text-xs">
+        <p>Seleziona le date che preferisci prima che mi incazzo sul serio.</p>
+      </div>
+    <?php endif; ?>
   </div>
 
   <?php if (!$alreadySubmitted): ?>
