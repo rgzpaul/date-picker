@@ -4,14 +4,19 @@ $event = getEventOrFail();
 $dbFile = eventDbFile($event);
 $cookieName = eventCookieName($event);
 
-$alreadySubmitted = eventAlreadySubmitted($event);
-$errorMessage = '';
+$submittedName = eventSubmittedName($event);
+$alreadySubmitted = $submittedName !== null;
+$isChanging = $alreadySubmitted && isset($_GET['modifica']);
+$showForm = !$alreadySubmitted || $isChanging;
 
 // Configuration settings
 $maxDates = 6; // Maximum number of dates selectable - change this value to adjust the limit
 
-// Salvataggio dei dati se il form è inviato
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
+// Salvataggio dei dati se il form è inviato.
+// Un nuovo invio con un nome già presente (confronto case-insensitive)
+// sovrascrive il voto precedente: è così che si cambia voto, anche da
+// un device senza cookie.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $dates = $_POST['dates'] ?? [];
   $nome = trim($_POST['nome'] ?? '');
 
@@ -26,31 +31,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 
     $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
 
-    // Controlla se il nome esiste già
-    $existingNames = array_unique(array_column($data, 'name'));
+    // Rimuove l'eventuale voto esistente con lo stesso nome
     $nomeNormalized = mb_strtolower($nome);
-    $nameExists = false;
-    foreach ($existingNames as $existingName) {
-      if (mb_strtolower($existingName) === $nomeNormalized) {
-        $nameExists = true;
-        break;
-      }
+    $data = array_values(array_filter($data, function ($entry) use ($nomeNormalized) {
+      $entryName = is_array($entry) ? ($entry['name'] ?? '') : '';
+      return mb_strtolower($entryName) !== $nomeNormalized;
+    }));
+
+    foreach ($datesArray as $date) {
+      $data[] = ['date' => trim($date), 'name' => $nome];
     }
+    file_put_contents($dbFile, json_encode($data));
 
-    if ($nameExists) {
-      $errorMessage = 'Questo nome è già stato utilizzato. Inserisci un nome diverso.';
-    } else {
-      foreach ($datesArray as $date) {
-        $data[] = ['date' => trim($date), 'name' => $nome];
-      }
-      file_put_contents($dbFile, json_encode($data));
+    // Il cookie memorizza il nome usato, per ritrovarlo al cambio voto (21 giorni)
+    setcookie($cookieName, $nome, strtotime('+21 days'));
 
-      // Imposta il cookie per 21 giorni
-      setcookie($cookieName, 'true', strtotime('+21 days'));
-
-      header('Location: report.php?event=' . urlencode($event));
-      exit;
-    }
+    header('Location: report.php?event=' . urlencode($event));
+    exit;
   }
 }
 ?>
@@ -145,7 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
 <body class="min-h-[100dvh] flex items-center justify-center p-4 bg-slate-50">
   <div class="card bg-white p-8 rounded-lg w-full max-w-md">
     <h1 class="text-xl font-semibold mb-2 text-slate-800 flex items-center justify-center">
-      <?php if ($alreadySubmitted): ?>
+      <?php if ($isChanging): ?>
+        <i data-lucide="pencil" class="w-5 h-5 mr-2 text-slate-500"></i>Modifica il tuo voto
+      <?php elseif ($alreadySubmitted): ?>
         <i data-lucide="check-circle" class="w-5 h-5 mr-2 text-slate-500"></i>Hai già votato
       <?php else: ?>
         <i data-lucide="calendar" class="w-5 h-5 mr-2 text-slate-500"></i>Seleziona date
@@ -158,18 +157,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       </span>
     </div>
 
-    <?php if (!$alreadySubmitted): ?>
-      <?php if ($errorMessage): ?>
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 text-sm flex items-center">
-          <i data-lucide="alert-circle" class="w-4 h-4 mr-2 flex-shrink-0"></i>
-          <?= htmlspecialchars($errorMessage) ?>
-        </div>
-      <?php endif; ?>
-
+    <?php if ($showForm): ?>
       <form method="POST" class="space-y-4">
         <div>
           <label for="nome" class="block text-sm font-medium text-slate-700 mb-1">Il tuo nome</label>
-          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300<?= $errorMessage ? ' border-red-300' : '' ?>">
+          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($_POST['nome'] ?? $submittedName ?? '') ?>" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-300">
         </div>
 
         <div class="flex items-center justify-end mb-1">
@@ -192,12 +184,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
       </form>
     <?php else: ?>
       <div class="bg-slate-50 border border-slate-200 p-4 mb-4 rounded-md">
-        <p class="text-slate-600 text-sm">Hai già inviato la tua selezione. Puoi visualizzare il report delle date più selezionate.</p>
+        <p class="text-slate-600 text-sm">Hai già inviato la tua selezione<?= $submittedName !== '' ? ' come "' . htmlspecialchars($submittedName) . '"' : '' ?>. Puoi modificarla oppure visualizzare il report delle date più selezionate.</p>
       </div>
 
-      <a href="report.php?event=<?= urlencode($event) ?>" class="btn block text-center w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
-        <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 inline"></i> Vai al report
-      </a>
+      <div class="space-y-4">
+        <a href="index.php?event=<?= urlencode($event) ?>&modifica=1" class="btn w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-md text-sm font-medium flex items-center justify-center border border-slate-200">
+          <i data-lucide="pencil" class="w-4 h-4 mr-2"></i> Modifica il tuo voto
+        </a>
+
+        <a href="report.php?event=<?= urlencode($event) ?>" class="btn block text-center w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 inline"></i> Vai al report
+        </a>
+      </div>
     <?php endif; ?>
 
     <?php if (!$alreadySubmitted): ?>
@@ -207,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadySubmitted) {
     <?php endif; ?>
   </div>
 
-  <?php if (!$alreadySubmitted): ?>
+  <?php if ($showForm): ?>
     <script>
       function formatDateItalian(dateObj) {
         const giorniSettimana = ['DOM', 'LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB'];

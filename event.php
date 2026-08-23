@@ -102,16 +102,18 @@ function eventCookieName($event)
   return 'already_submitted_' . $event;
 }
 
-// True se il browser ha il cookie di voto dell'evento.
-// Confronto case-insensitive per riconoscere i cookie impostati
-// prima della normalizzazione (es. already_submitted_Cena).
-function eventAlreadySubmitted($event)
+// Nome con cui questo browser ha già votato per l'evento, oppure null se non
+// ha ancora votato. Stringa vuota se il cookie è di una versione precedente
+// che non memorizzava il nome (valore 'true').
+// Confronto case-insensitive sul nome del cookie per riconoscere anche i
+// cookie impostati prima della normalizzazione (es. already_submitted_Cena).
+function eventSubmittedName($event)
 {
   $target = eventCookieName($event);
-  foreach (array_keys($_COOKIE) as $name) {
+  foreach ($_COOKIE as $name => $value) {
     if (strtolower($name) === $target) {
-      return true;
+      return $value === 'true' ? '' : $value;
     }
   }
-  return false;
+  return null;
 }
