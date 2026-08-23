@@ -4,7 +4,7 @@ $event = getEventOrFail();
 $dbFile = eventDbFile($event);
 $cookieName = eventCookieName($event);
 
-$alreadySubmitted = isset($_COOKIE[$cookieName]);
+$alreadySubmitted = eventAlreadySubmitted($event);
 $errorMessage = '';
 
 // Configuration settings

@@ -60,14 +60,58 @@ function getEventOrFail()
   exit;
 }
 
-// Percorso del file dati dell'evento
+// Percorso del file dati dell'evento.
+// Migra al volo eventuali file creati prima della normalizzazione in minuscolo
+// (es. db_Cena.json -> db_cena.json), unendo i voti se esistono entrambi.
 function eventDbFile($event)
 {
-  return __DIR__ . '/db_' . $event . '.json';
+  $target = 'db_' . $event . '.json';
+  $file = __DIR__ . '/' . $target;
+
+  foreach (glob(__DIR__ . '/db_*.json') as $candidate) {
+    $base = basename($candidate);
+    if ($base !== $target && strtolower($base) === $target) {
+      if (!file_exists($file)) {
+        rename($candidate, $file);
+      } else {
+        $old = json_decode(file_get_contents($candidate), true) ?? [];
+        $new = json_decode(file_get_contents($file), true) ?? [];
+        $merged = [];
+        $seen = [];
+        foreach (array_merge($old, $new) as $entry) {
+          $key = json_encode($entry);
+          if (!isset($seen[$key])) {
+            $seen[$key] = true;
+            $merged[] = $entry;
+          }
+        }
+        // Prima elimina, poi scrivi: sicuro anche su filesystem case-insensitive
+        unlink($candidate);
+        file_put_contents($file, json_encode($merged));
+      }
+      break;
+    }
+  }
+
+  return $file;
 }
 
 // Nome del cookie "ha già votato" dell'evento
 function eventCookieName($event)
 {
   return 'already_submitted_' . $event;
+}
+
+// True se il browser ha il cookie di voto dell'evento.
+// Confronto case-insensitive per riconoscere i cookie impostati
+// prima della normalizzazione (es. already_submitted_Cena).
+function eventAlreadySubmitted($event)
+{
+  $target = eventCookieName($event);
+  foreach (array_keys($_COOKIE) as $name) {
+    if (strtolower($name) === $target) {
+      return true;
+    }
+  }
+  return false;
 }
