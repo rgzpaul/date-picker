@@ -18,14 +18,16 @@ $maxDates = 6; // Maximum number of dates selectable - change this value to adju
 // Salvataggio dei dati se il form è inviato.
 // Un nuovo invio con un nome già presente (confronto case-insensitive)
 // sovrascrive il voto precedente: è così che si cambia voto, anche da
-// un device senza cookie.
+// un device senza cookie. In modifica, l'invio senza alcuna data
+// ritira il voto: le proprie voci vengono eliminate e il cookie rimosso.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $dates = $_POST['dates'] ?? [];
+  $dates = $_POST['dates'] ?? '';
+  $dates = is_string($dates) ? $dates : '';
   $nome = trim($_POST['nome'] ?? '');
+  $isWithdrawal = $isChanging && $dates === '' && $nome !== '';
 
-  if (!empty($dates) && !empty($nome)) {
-    $datesArray = explode(',', $dates);
-    $datesArray = array_filter($datesArray);
+  if (($dates !== '' || $isWithdrawal) && $nome !== '') {
+    $datesArray = $isWithdrawal ? [] : array_filter(explode(',', $dates));
 
     // Limit to max dates (ensure backend validation too)
     if (count($datesArray) > $maxDates) {
@@ -46,8 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     file_put_contents($dbFile, json_encode($data));
 
-    // Il cookie memorizza il nome usato, per ritrovarlo al cambio voto (21 giorni)
-    setcookie($cookieName, $nome, strtotime('+21 days'));
+    if ($isWithdrawal) {
+      // Torna allo stato "non hai votato"
+      eventForgetSubmission($event);
+    } else {
+      // Il cookie memorizza il nome usato, per ritrovarlo al cambio voto (21 giorni)
+      setcookie($cookieName, $nome, strtotime('+21 days'));
+    }
 
     header('Location: report.php?event=' . urlencode($event));
     exit;
@@ -320,6 +327,16 @@ if ($isChanging && $submittedName !== '') {
 
       // Mostra subito le date precaricate (cambio voto) o il placeholder
       syncSelection(calendar.selectedDates);
+
+      <?php if ($isChanging): ?>
+      // In modifica, inviare senza alcuna data ritira il voto: chiedi conferma
+      document.querySelector('form').addEventListener('submit', function(e) {
+        if (document.getElementById('dates').value === '' &&
+            !confirm('Nessuna data selezionata: confermi di voler ritirare il tuo voto?')) {
+          e.preventDefault();
+        }
+      });
+      <?php endif; ?>
 
       // Helper function to update the month display
       function updateMonthDisplay(instance) {

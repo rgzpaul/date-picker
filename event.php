@@ -107,6 +107,18 @@ function eventCookieName($event)
 // che non memorizzava il nome (valore 'true').
 // Confronto case-insensitive sul nome del cookie per riconoscere anche i
 // cookie impostati prima della normalizzazione (es. already_submitted_Cena).
+// Elimina i cookie di voto dell'evento, in tutte le varianti di maiuscole
+// eventualmente rimaste da prima della normalizzazione
+function eventForgetSubmission($event)
+{
+  $target = eventCookieName($event);
+  foreach (array_keys($_COOKIE) as $name) {
+    if (strtolower($name) === $target) {
+      setcookie($name, '', time() - 3600);
+    }
+  }
+}
+
 function eventSubmittedName($event)
 {
   $target = eventCookieName($event);
