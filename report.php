@@ -65,10 +65,47 @@ function formatDateItalian($dateStr)
   return "$giorno $dataFormattata";
 }
 
+// Renderizza una riga della classifica
+function renderDateItem($date, $info, $totalVotes)
+{
+  $count = $info['count'];
+  $names = $info['names'];
+  $percentage = ($count / $totalVotes) * 100;
+  ?>
+  <li class="date-item p-3 bg-slate-50 rounded-md border border-slate-200">
+    <div class="flex justify-between items-center mb-2">
+      <div class="flex items-center">
+        <span class="text-sm font-medium text-slate-700 mr-3">
+          <?= htmlspecialchars(formatDateItalian($date)) ?>
+        </span>
+        <span class="text-xs text-slate-500">
+          <?= $count ?> vot<?= ($count == 1) ? 'o' : 'i' ?>
+        </span>
+      </div>
+      <span class="text-xs text-slate-400"><?= number_format($percentage, 0) ?>%</span>
+    </div>
+    <div class="w-full bg-slate-200 rounded-full h-1.5 mb-2">
+      <div class="bg-slate-600 h-1.5 rounded-full" style="width: <?= $percentage ?>%"></div>
+    </div>
+    <div class="flex flex-wrap gap-1.5">
+      <?php foreach ($names as $name): ?>
+        <span class="inline-flex items-center text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded">
+          <i data-lucide="user" class="w-3 h-3 mr-1"></i><?= htmlspecialchars($name) ?>
+        </span>
+      <?php endforeach; ?>
+    </div>
+  </li>
+  <?php
+}
+
 // Calcola la data più popolare
 $mostPopularDate = !empty($counter) ? key($counter) : null;
 $totalVotes = array_sum($counter);
 $totalDates = count($counter);
+
+// Classifica: prime 3 date in evidenza, le altre in una sezione richiudibile
+$topDates = array_slice($dateGroups, 0, 3, true);
+$otherDates = array_slice($dateGroups, 3, null, true);
 
 // Numero di votanti (nomi distinti, case-insensitive)
 $voterNames = [];
@@ -105,6 +142,14 @@ $totalVoters = count($voterNames);
 
     .btn {
       transition: background-color 0.15s ease;
+    }
+
+    .chevron {
+      transition: transform 0.15s ease;
+    }
+
+    details[open] .chevron {
+      transform: rotate(180deg);
     }
 
     @media (max-width: 768px) {
@@ -165,37 +210,20 @@ $totalVoters = count($voterNames);
         </h2>
 
         <ul class="space-y-2">
-          <?php foreach ($dateGroups as $date => $info): ?>
-            <?php
-            $count = $info['count'];
-            $names = $info['names'];
-            $percentage = ($count / $totalVotes) * 100;
-            ?>
-            <li class="date-item p-3 bg-slate-50 rounded-md border border-slate-200">
-              <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center">
-                  <span class="text-sm font-medium text-slate-700 mr-3">
-                    <?= htmlspecialchars(formatDateItalian($date)) ?>
-                  </span>
-                  <span class="text-xs text-slate-500">
-                    <?= $count ?> vot<?= ($count == 1) ? 'o' : 'i' ?>
-                  </span>
-                </div>
-                <span class="text-xs text-slate-400"><?= number_format($percentage, 0) ?>%</span>
-              </div>
-              <div class="w-full bg-slate-200 rounded-full h-1.5 mb-2">
-                <div class="bg-slate-600 h-1.5 rounded-full" style="width: <?= $percentage ?>%"></div>
-              </div>
-              <div class="flex flex-wrap gap-1.5">
-                <?php foreach ($names as $name): ?>
-                  <span class="inline-flex items-center text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded">
-                    <i data-lucide="user" class="w-3 h-3 mr-1"></i><?= htmlspecialchars($name) ?>
-                  </span>
-                <?php endforeach; ?>
-              </div>
-            </li>
-          <?php endforeach; ?>
+          <?php foreach ($topDates as $date => $info) renderDateItem($date, $info, $totalVotes); ?>
         </ul>
+
+        <?php if (!empty($otherDates)): ?>
+          <details class="mt-3">
+            <summary class="btn cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden p-3 bg-slate-50 hover:bg-slate-100 rounded-md border border-slate-200 text-sm font-medium text-slate-600 flex items-center">
+              <i data-lucide="chevron-down" class="chevron w-4 h-4 mr-2"></i>
+              Altre date (<?= count($otherDates) ?>)
+            </summary>
+            <ul class="space-y-2 mt-2">
+              <?php foreach ($otherDates as $date => $info) renderDateItem($date, $info, $totalVotes); ?>
+            </ul>
+          </details>
+        <?php endif; ?>
       <?php else: ?>
         <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
           <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
