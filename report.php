@@ -32,9 +32,11 @@ foreach ($data as $entry) {
   }
 }
 
-// Ordina per conteggio decrescente
-uasort($dateGroups, function($a, $b) {
-  return $b['count'] - $a['count'];
+// Ordina per conteggio decrescente; a parità di voti viene prima la data
+// di calendario più vicina (le chiavi Y-m-d si confrontano come stringhe)
+$groupsForSort = $dateGroups;
+uksort($dateGroups, function ($a, $b) use ($groupsForSort) {
+  return $groupsForSort[$b]['count'] - $groupsForSort[$a]['count'] ?: strcmp($a, $b);
 });
 
 // I voti "mi adatto" contano automaticamente sulla data in testa
