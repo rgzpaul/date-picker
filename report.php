@@ -6,9 +6,14 @@ $dbFile = eventDbFile($event);
 // Legge le date salvate per l'evento
 $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
 
-// Raggruppa per data e raccoglie i nomi
+// Raggruppa per data e raccoglie i nomi; i voti "mi adatto" vanno a parte
 $dateGroups = [];
+$adaptiveNames = [];
 foreach ($data as $entry) {
+  if (is_array($entry) && !empty($entry['adaptive'])) {
+    $adaptiveNames[] = $entry['name'] ?? 'Anonimo';
+    continue;
+  }
   // Supporta sia il nuovo formato (array con date e name) che il vecchio (solo stringa)
   if (is_array($entry) && isset($entry['date'])) {
     $date = $entry['date'];
@@ -31,6 +36,17 @@ foreach ($data as $entry) {
 uasort($dateGroups, function($a, $b) {
   return $b['count'] - $a['count'];
 });
+
+// I voti "mi adatto" contano automaticamente sulla data in testa
+if (!empty($adaptiveNames) && !empty($dateGroups)) {
+  $topDate = array_key_first($dateGroups);
+  foreach ($adaptiveNames as $adaptiveName) {
+    $dateGroups[$topDate]['count']++;
+    if (!in_array($adaptiveName, $dateGroups[$topDate]['names'])) {
+      $dateGroups[$topDate]['names'][] = $adaptiveName;
+    }
+  }
+}
 
 // Crea il counter per compatibilita
 $counter = [];
@@ -66,7 +82,7 @@ function formatDateItalian($dateStr)
 }
 
 // Renderizza una riga della classifica
-function renderDateItem($date, $info, $totalVotes)
+function renderDateItem($date, $info, $totalVotes, $adaptiveNames = [])
 {
   $count = $info['count'];
   $names = $info['names'];
@@ -89,8 +105,9 @@ function renderDateItem($date, $info, $totalVotes)
     </div>
     <div class="flex flex-wrap gap-1.5">
       <?php foreach ($names as $name): ?>
-        <span class="inline-flex items-center text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded">
-          <i data-lucide="user" class="w-3 h-3 mr-1"></i><?= htmlspecialchars($name) ?>
+        <?php $isAdaptiveName = in_array($name, $adaptiveNames); ?>
+        <span class="inline-flex items-center text-xs <?= $isAdaptiveName ? 'bg-slate-100 border border-dashed border-slate-400' : 'bg-slate-200' ?> text-slate-600 px-2 py-0.5 rounded"<?= $isAdaptiveName ? ' title="Si adatta alla data più votata"' : '' ?>>
+          <i data-lucide="<?= $isAdaptiveName ? 'shuffle' : 'user' ?>" class="w-3 h-3 mr-1"></i><?= htmlspecialchars($name) ?>
         </span>
       <?php endforeach; ?>
     </div>
@@ -210,7 +227,7 @@ $totalVoters = count($voterNames);
         </h2>
 
         <ul class="space-y-2">
-          <?php foreach ($topDates as $date => $info) renderDateItem($date, $info, $totalVotes); ?>
+          <?php foreach ($topDates as $date => $info) renderDateItem($date, $info, $totalVotes, $adaptiveNames); ?>
         </ul>
 
         <?php if (!empty($otherDates)): ?>
@@ -220,13 +237,19 @@ $totalVoters = count($voterNames);
               Altre date (<?= count($otherDates) ?>)
             </summary>
             <ul class="space-y-2 mt-2">
-              <?php foreach ($otherDates as $date => $info) renderDateItem($date, $info, $totalVotes); ?>
+              <?php foreach ($otherDates as $date => $info) renderDateItem($date, $info, $totalVotes, $adaptiveNames); ?>
             </ul>
           </details>
         <?php endif; ?>
       <?php else: ?>
         <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
           <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
+          <?php if (!empty($adaptiveNames)): ?>
+            <p class="text-slate-400 text-xs mb-4 flex items-center justify-center">
+              <i data-lucide="shuffle" class="w-3 h-3 mr-1.5"></i>
+              Si adattano alla data più votata: <?= htmlspecialchars(implode(', ', $adaptiveNames)) ?>
+            </p>
+          <?php endif; ?>
           <a href="index.php?event=<?= urlencode($event) ?>" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
             Seleziona date
           </a>

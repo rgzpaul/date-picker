@@ -24,10 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $dates = $_POST['dates'] ?? '';
   $dates = is_string($dates) ? $dates : '';
   $nome = trim($_POST['nome'] ?? '');
-  $isWithdrawal = $isChanging && $dates === '' && $nome !== '';
+  // Voto "mi adatto": nessuna data fissa, nel report conta sulla data in testa
+  $adattivo = ($_POST['adattivo'] ?? '') === '1';
+  $isWithdrawal = $isChanging && $dates === '' && !$adattivo && $nome !== '';
 
-  if (($dates !== '' || $isWithdrawal) && $nome !== '') {
-    $datesArray = $isWithdrawal ? [] : array_filter(explode(',', $dates));
+  if (($dates !== '' || $adattivo || $isWithdrawal) && $nome !== '') {
+    $datesArray = ($isWithdrawal || $adattivo) ? [] : array_filter(explode(',', $dates));
 
     // Limit to max dates (ensure backend validation too)
     if (count($datesArray) > $maxDates) {
@@ -43,8 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return mb_strtolower($entryName) !== $nomeNormalized;
     }));
 
-    foreach ($datesArray as $date) {
-      $data[] = ['date' => trim($date), 'name' => $nome];
+    if ($adattivo) {
+      $data[] = ['adaptive' => true, 'name' => $nome];
+    } else {
+      foreach ($datesArray as $date) {
+        $data[] = ['date' => trim($date), 'name' => $nome];
+      }
     }
     file_put_contents($dbFile, json_encode($data));
 
@@ -61,14 +67,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// In caso di cambio voto, date già votate da precaricare nel calendario
-// (solo odierne o future: le passate non sono più selezionabili)
+// In caso di cambio voto, stato attuale da precaricare: le date già votate
+// (solo odierne o future: le passate non sono più selezionabili) oppure
+// la modalità "mi adatto"
 $existingDates = [];
+$wasAdaptive = false;
 if ($isChanging && $submittedName !== '') {
   $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
   $target = mb_strtolower($submittedName);
   foreach ($data as $entry) {
-    if (is_array($entry) && isset($entry['date']) && mb_strtolower($entry['name'] ?? '') === $target) {
+    if (!is_array($entry) || mb_strtolower($entry['name'] ?? '') !== $target) {
+      continue;
+    }
+    if (!empty($entry['adaptive'])) {
+      $wasAdaptive = true;
+    } elseif (isset($entry['date'])) {
       $timestamp = strtotime($entry['date']);
       if ($timestamp !== false && $timestamp >= strtotime('today')) {
         $existingDates[] = $entry['date'];
@@ -199,10 +212,16 @@ if ($isChanging && $submittedName !== '') {
         <div id="selected-dates" class="flex flex-wrap gap-2 min-h-[56px] p-3 bg-slate-50 rounded-md border border-slate-200"></div>
 
         <input type="hidden" id="dates" name="dates" required>
+        <input type="hidden" id="adattivo" name="adattivo" value="<?= $wasAdaptive ? '1' : '0' ?>">
 
-        <button type="button" id="open-calendar" class="btn w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium flex items-center justify-center">
-          <i data-lucide="calendar-plus" class="w-4 h-4 mr-2"></i> Scegli date
-        </button>
+        <div class="flex gap-2">
+          <button type="button" id="open-calendar" class="btn flex-1 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2.5 rounded-md text-sm font-medium flex items-center justify-center">
+            <i data-lucide="calendar-plus" class="w-4 h-4 mr-1.5"></i> Scegli date
+          </button>
+          <button type="button" id="adaptive-toggle" class="btn flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-2.5 rounded-md text-sm font-medium flex items-center justify-center">
+            <i data-lucide="shuffle" class="w-4 h-4 mr-1.5"></i> Mi adatto
+          </button>
+        </div>
 
         <button type="submit" class="btn w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-md text-sm font-medium flex items-center justify-center border border-slate-200">
           <i data-lucide="save" class="w-4 h-4 mr-2"></i> Invia selezione
@@ -255,6 +274,9 @@ if ($isChanging && $submittedName !== '') {
       // Get the max dates value directly from PHP
       const maxDatesAllowed = <?= $maxDates ?>;
 
+      // Modalità "mi adatto": il voto seguirà la data più votata
+      let adaptiveMode = <?= json_encode($wasAdaptive) ?>;
+
       const calendar = flatpickr(fakeInput, {
         mode: 'multiple',
         dateFormat: 'Y-m-d',
@@ -285,6 +307,11 @@ if ($isChanging && $submittedName !== '') {
 
       // Aggiorna i tag delle date scelte e il campo nascosto del form
       function syncSelection(selectedDates) {
+        // Scegliere una data disattiva "mi adatto"
+        if (adaptiveMode && selectedDates.length > 0) {
+          setAdaptive(false);
+          return;
+        }
         const selectedDatesContainer = document.getElementById('selected-dates');
           selectedDatesContainer.innerHTML = '';
 
@@ -319,19 +346,46 @@ if ($isChanging && $submittedName !== '') {
           });
 
           if (selectedDates.length === 0) {
-            selectedDatesContainer.innerHTML = '<p class="text-slate-400 text-center w-full my-2 text-xs">Nessuna data selezionata</p>';
+            selectedDatesContainer.innerHTML = adaptiveMode
+              ? '<p class="text-slate-500 text-center w-full my-2 text-xs font-medium">Mi adatto alla data più votata</p>'
+              : '<p class="text-slate-400 text-center w-full my-2 text-xs">Nessuna data selezionata</p>';
           }
 
           datesInput.value = formattedDates.join(',');
       }
 
-      // Mostra subito le date precaricate (cambio voto) o il placeholder
+      // Attiva/disattiva la modalità "mi adatto"
+      const adaptiveBtn = document.getElementById('adaptive-toggle');
+
+      function setAdaptive(on) {
+        adaptiveMode = on;
+        document.getElementById('adattivo').value = on ? '1' : '0';
+        adaptiveBtn.classList.toggle('bg-slate-800', on);
+        adaptiveBtn.classList.toggle('hover:bg-slate-700', on);
+        adaptiveBtn.classList.toggle('text-white', on);
+        adaptiveBtn.classList.toggle('bg-slate-100', !on);
+        adaptiveBtn.classList.toggle('hover:bg-slate-200', !on);
+        adaptiveBtn.classList.toggle('text-slate-700', !on);
+        if (on) {
+          calendar.clear();
+        } else {
+          syncSelection(calendar.selectedDates);
+        }
+      }
+
+      adaptiveBtn.addEventListener('click', function() {
+        setAdaptive(!adaptiveMode);
+      });
+
+      // Stato iniziale: date precaricate (cambio voto), "mi adatto" o placeholder
+      setAdaptive(adaptiveMode);
       syncSelection(calendar.selectedDates);
 
       <?php if ($isChanging): ?>
-      // In modifica, inviare senza alcuna data ritira il voto: chiedi conferma
+      // In modifica, inviare senza alcuna data né "mi adatto" ritira il voto: chiedi conferma
       document.querySelector('form').addEventListener('submit', function(e) {
         if (document.getElementById('dates').value === '' &&
+            document.getElementById('adattivo').value !== '1' &&
             !confirm('Nessuna data selezionata: confermi di voler ritirare il tuo voto?')) {
           e.preventDefault();
         }
