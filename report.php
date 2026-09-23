@@ -126,13 +126,20 @@ $totalDates = count($counter);
 $topDates = array_slice($dateGroups, 0, 3, true);
 $otherDates = array_slice($dateGroups, 3, null, true);
 
-// Numero di votanti (nomi distinti, case-insensitive)
+// Elenco dei votanti (nomi distinti, case-insensitive), in ordine alfabetico
 $voterNames = [];
 foreach ($data as $entry) {
   $name = is_array($entry) ? ($entry['name'] ?? 'Anonimo') : 'Anonimo';
-  $voterNames[mb_strtolower($name)] = true;
+  $key = mb_strtolower($name);
+  if (!isset($voterNames[$key])) {
+    $voterNames[$key] = $name;
+  }
 }
+uasort($voterNames, 'strcasecmp');
 $totalVoters = count($voterNames);
+
+// Chi ha votato "mi adatto", per distinguerlo nell'elenco
+$adaptiveKeys = array_map('mb_strtolower', $adaptiveNames);
 
 ?>
 <!DOCTYPE html>
@@ -206,12 +213,25 @@ $totalVoters = count($voterNames);
       <?php if (!empty($counter)): ?>
         <!-- Stats Cards -->
         <div class="grid grid-cols-2 gap-3 mb-6">
-          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
-            <div class="text-xs text-slate-500 mb-1">Votanti</div>
-            <div class="text-lg font-semibold text-slate-800"><?= $totalVoters ?></div>
-          </div>
+          <details class="stats-card self-start bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
+            <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+              <div class="text-xs text-slate-500 mb-1 flex items-center justify-between">
+                Votanti
+                <i data-lucide="chevron-down" class="chevron w-3.5 h-3.5"></i>
+              </div>
+              <div class="text-lg font-semibold text-slate-800"><?= $totalVoters ?></div>
+            </summary>
+            <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-slate-200">
+              <?php foreach ($voterNames as $key => $name): ?>
+                <?php $isAdaptiveName = in_array($key, $adaptiveKeys); ?>
+                <span class="inline-flex items-center text-xs <?= $isAdaptiveName ? 'bg-slate-100 border border-dashed border-slate-400' : 'bg-slate-200' ?> text-slate-600 px-2 py-0.5 rounded"<?= $isAdaptiveName ? ' title="Si adatta alla data più votata"' : '' ?>>
+                  <i data-lucide="<?= $isAdaptiveName ? 'shuffle' : 'user' ?>" class="w-3 h-3 mr-1"></i><?= htmlspecialchars($name) ?>
+                </span>
+              <?php endforeach; ?>
+            </div>
+          </details>
 
-          <div class="stats-card bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
+          <div class="stats-card self-start bg-slate-50 border border-slate-200 rounded-md py-3 px-4">
             <div class="text-xs text-slate-500 mb-1">Date proposte</div>
             <div class="text-lg font-semibold text-slate-800"><?= $totalDates ?></div>
           </div>
