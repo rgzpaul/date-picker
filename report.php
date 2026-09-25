@@ -10,18 +10,12 @@ $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ??
 $dateGroups = [];
 $adaptiveNames = [];
 foreach ($data as $entry) {
-  if (is_array($entry) && !empty($entry['adaptive'])) {
-    $adaptiveNames[] = $entry['name'] ?? 'Anonimo';
+  if (!empty($entry['adaptive'])) {
+    $adaptiveNames[] = $entry['name'];
     continue;
   }
-  // Supporta sia il nuovo formato (array con date e name) che il vecchio (solo stringa)
-  if (is_array($entry) && isset($entry['date'])) {
-    $date = $entry['date'];
-    $name = $entry['name'] ?? 'Anonimo';
-  } else {
-    $date = $entry;
-    $name = 'Anonimo';
-  }
+  $date = $entry['date'];
+  $name = $entry['name'];
 
   if (!isset($dateGroups[$date])) {
     $dateGroups[$date] = ['count' => 0, 'names' => []];
@@ -129,7 +123,7 @@ $otherDates = array_slice($dateGroups, 3, null, true);
 // Elenco dei votanti (nomi distinti, case-insensitive), in ordine alfabetico
 $voterNames = [];
 foreach ($data as $entry) {
-  $name = is_array($entry) ? ($entry['name'] ?? 'Anonimo') : 'Anonimo';
+  $name = $entry['name'];
   $key = mb_strtolower($name);
   if (!isset($voterNames[$key])) {
     $voterNames[$key] = $name;

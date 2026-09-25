@@ -60,40 +60,10 @@ function getEventOrFail()
   exit;
 }
 
-// Percorso del file dati dell'evento.
-// Migra al volo eventuali file creati prima della normalizzazione in minuscolo
-// (es. db_Cena.json -> db_cena.json), unendo i voti se esistono entrambi.
+// Percorso del file dati dell'evento
 function eventDbFile($event)
 {
-  $target = 'db_' . $event . '.json';
-  $file = __DIR__ . '/' . $target;
-
-  foreach (glob(__DIR__ . '/db_*.json') as $candidate) {
-    $base = basename($candidate);
-    if ($base !== $target && strtolower($base) === $target) {
-      if (!file_exists($file)) {
-        rename($candidate, $file);
-      } else {
-        $old = json_decode(file_get_contents($candidate), true) ?? [];
-        $new = json_decode(file_get_contents($file), true) ?? [];
-        $merged = [];
-        $seen = [];
-        foreach (array_merge($old, $new) as $entry) {
-          $key = json_encode($entry);
-          if (!isset($seen[$key])) {
-            $seen[$key] = true;
-            $merged[] = $entry;
-          }
-        }
-        // Prima elimina, poi scrivi: sicuro anche su filesystem case-insensitive
-        unlink($candidate);
-        file_put_contents($file, json_encode($merged));
-      }
-      break;
-    }
-  }
-
-  return $file;
+  return __DIR__ . '/db_' . $event . '.json';
 }
 
 // Nome del cookie "ha già votato" dell'evento
@@ -103,33 +73,14 @@ function eventCookieName($event)
 }
 
 // Nome con cui questo browser ha già votato per l'evento, oppure null se non
-// ha ancora votato. Stringa vuota se il cookie è di una versione precedente
-// che non memorizzava il nome (valore 'true').
-// Confronto case-insensitive sul nome del cookie per riconoscere anche i
-// cookie impostati prima della normalizzazione (es. already_submitted_Cena).
-// Elimina i cookie di voto dell'evento, in tutte le varianti di maiuscole
-// eventualmente rimaste da prima della normalizzazione
-function eventForgetSubmission($event)
-{
-  $target = eventCookieName($event);
-  foreach (array_keys($_COOKIE) as $name) {
-    if (strtolower($name) === $target) {
-      setcookie($name, '', time() - 3600);
-    }
-  }
-}
-
+// ha ancora votato
 function eventSubmittedName($event)
 {
-  $target = eventCookieName($event);
-  $legacyFound = null;
-  foreach ($_COOKIE as $name => $value) {
-    if (strtolower($name) === $target) {
-      if ($value !== 'true') {
-        return $value;
-      }
-      $legacyFound = '';
-    }
-  }
-  return $legacyFound;
+  return $_COOKIE[eventCookieName($event)] ?? null;
+}
+
+// Elimina il cookie di voto dell'evento
+function eventForgetSubmission($event)
+{
+  setcookie(eventCookieName($event), '', time() - 3600);
 }

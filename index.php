@@ -9,8 +9,7 @@ $alreadySubmitted = $submittedName !== null;
 $isChanging = $alreadySubmitted && isset($_GET['modifica']);
 $showForm = !$alreadySubmitted || $isChanging;
 // In modifica l'identità è fissata dal cookie: il nome non si cambia
-// (resta libero solo per i cookie di vecchio tipo che non memorizzavano il nome)
-$nomeLocked = $isChanging && $submittedName !== '';
+$nomeLocked = $isChanging;
 
 // Configuration settings
 $maxDates = 6; // Maximum number of dates selectable - change this value to adjust the limit
@@ -41,8 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Rimuove l'eventuale voto esistente con lo stesso nome
     $nomeNormalized = mb_strtolower($nome);
     $data = array_values(array_filter($data, function ($entry) use ($nomeNormalized) {
-      $entryName = is_array($entry) ? ($entry['name'] ?? '') : '';
-      return mb_strtolower($entryName) !== $nomeNormalized;
+      return mb_strtolower($entry['name']) !== $nomeNormalized;
     }));
 
     if ($adattivo) {
@@ -72,16 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // la modalità "mi adatto"
 $existingDates = [];
 $wasAdaptive = false;
-if ($isChanging && $submittedName !== '') {
+if ($isChanging) {
   $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
   $target = mb_strtolower($submittedName);
   foreach ($data as $entry) {
-    if (!is_array($entry) || mb_strtolower($entry['name'] ?? '') !== $target) {
+    if (mb_strtolower($entry['name']) !== $target) {
       continue;
     }
     if (!empty($entry['adaptive'])) {
       $wasAdaptive = true;
-    } elseif (isset($entry['date'])) {
+    } else {
       $timestamp = strtotime($entry['date']);
       if ($timestamp !== false && $timestamp >= strtotime('today')) {
         $existingDates[] = $entry['date'];
@@ -200,7 +198,7 @@ if ($isChanging && $submittedName !== '') {
       <form method="POST" class="space-y-4">
         <div>
           <label for="nome" class="block text-sm font-medium text-slate-700 mb-1">Il tuo nome</label>
-          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($nomeLocked ? $submittedName : ($_POST['nome'] ?? $submittedName ?? '')) ?>"<?= $nomeLocked ? ' readonly' : '' ?> class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm placeholder-slate-400 focus:outline-none<?= $nomeLocked ? ' text-slate-500 cursor-not-allowed' : ' text-slate-700 focus:ring-2 focus:ring-slate-300 focus:border-slate-300' ?>">
+          <input type="text" id="nome" name="nome" required placeholder="Inserisci il tuo nome" value="<?= htmlspecialchars($nomeLocked ? $submittedName : ($_POST['nome'] ?? '')) ?>"<?= $nomeLocked ? ' readonly' : '' ?> class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm placeholder-slate-400 focus:outline-none<?= $nomeLocked ? ' text-slate-500 cursor-not-allowed' : ' text-slate-700 focus:ring-2 focus:ring-slate-300 focus:border-slate-300' ?>">
         </div>
 
         <div class="flex items-center justify-end mb-1">
@@ -229,7 +227,7 @@ if ($isChanging && $submittedName !== '') {
       </form>
     <?php else: ?>
       <div class="bg-slate-50 border border-slate-200 p-4 mb-4 rounded-md">
-        <p class="text-slate-600 text-sm"><?= $submittedName !== '' ? htmlspecialchars($submittedName) . ', hai' : 'Hai' ?> già inviato la tua selezione. Puoi modificarla oppure visualizzare il report delle date più selezionate.</p>
+        <p class="text-slate-600 text-sm"><?= htmlspecialchars($submittedName) ?>, hai già inviato la tua selezione. Puoi modificarla oppure visualizzare il report delle date più selezionate.</p>
       </div>
 
       <div class="space-y-4">
