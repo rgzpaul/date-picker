@@ -14,7 +14,18 @@ function getEventOrFail()
     return strtolower($event);
   }
 
-  http_response_code(400);
+  eventErrorPage(
+    400,
+    'Evento non specificato',
+    'Questa pagina richiede un evento valido nel parametro URL <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs">event</code>.',
+    'Esempio: <code class="bg-slate-100 px-1.5 py-0.5 rounded">?event=nome-evento</code> (lettere, numeri, trattini e underscore)'
+  );
+}
+
+// Mostra una pagina di errore e termina ($message e $hint sono HTML statico)
+function eventErrorPage($code, $title, $message, $hint = '')
+{
+  http_response_code($code);
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -22,7 +33,7 @@ function getEventOrFail()
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Evento non specificato</title>
+  <title><?= htmlspecialchars($title) ?></title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,14 +54,16 @@ function getEventOrFail()
 <body class="min-h-[100dvh] flex items-center justify-center p-4 bg-slate-50">
   <div class="card bg-white p-8 rounded-lg w-full max-w-md text-center">
     <h1 class="text-xl font-semibold mb-4 text-slate-800 flex items-center justify-center">
-      <i data-lucide="alert-circle" class="w-5 h-5 mr-2 text-red-500"></i>Evento non specificato
+      <i data-lucide="alert-circle" class="w-5 h-5 mr-2 text-red-500"></i><?= htmlspecialchars($title) ?>
     </h1>
     <p class="text-slate-600 text-sm mb-2">
-      Questa pagina richiede un evento valido nel parametro URL <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs">event</code>.
+      <?= $message ?>
     </p>
-    <p class="text-slate-400 text-xs">
-      Esempio: <code class="bg-slate-100 px-1.5 py-0.5 rounded">?event=nome-evento</code> (lettere, numeri, trattini e underscore)
-    </p>
+    <?php if ($hint !== ''): ?>
+      <p class="text-slate-400 text-xs">
+        <?= $hint ?>
+      </p>
+    <?php endif; ?>
   </div>
   <script>lucide.createIcons();</script>
 </body>
@@ -64,6 +77,54 @@ function getEventOrFail()
 function eventDbFile($event)
 {
   return __DIR__ . '/db_' . $event . '.json';
+}
+
+// Dati dell'evento, salvati nel suo file JSON come:
+//   {"closed": false, "votes": [...]}
+// Per chiudere un evento basta impostare "closed": true nel file: le
+// votazioni si fermano e resta consultabile solo il report.
+// I file nel formato precedente (la sola lista dei voti) vengono convertiti
+// al primo accesso, così la proprietà "closed" è già lì da modificare.
+function eventLoad($event)
+{
+  $file = eventDbFile($event);
+  $json = file_exists($file) ? trim(file_get_contents($file)) : '';
+  if ($json === '') {
+    return ['closed' => false, 'votes' => []];
+  }
+
+  $data = json_decode($json, true);
+  if (!is_array($data)) {
+    // Un file illeggibile (es. dopo una modifica a mano sbagliata) non va mai
+    // trattato come vuoto: il primo voto successivo lo sovrascriverebbe
+    eventErrorPage(
+      500,
+      'Dati evento non leggibili',
+      'Il file dati di questo evento non è un JSON valido: va corretto prima di poter votare o consultare il report.'
+    );
+  }
+
+  if ($data === [] || isset($data[0])) {
+    $data = ['closed' => false, 'votes' => $data];
+    eventSave($event, $data);
+  }
+
+  // "closed" e "votes" normalizzati e in testa; altre proprietà aggiunte a mano restano
+  return [
+    'closed' => filter_var($data['closed'] ?? false, FILTER_VALIDATE_BOOLEAN),
+    'votes' => is_array($data['votes'] ?? null) ? $data['votes'] : [],
+  ] + $data;
+}
+
+// Salva i dati dell'evento in un JSON leggibile e modificabile a mano.
+// Se la codifica fallisse non scrive nulla, per non azzerare il file.
+function eventSave($event, $data)
+{
+  $data['votes'] = array_values($data['votes']);
+  $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+  if ($json !== false) {
+    file_put_contents(eventDbFile($event), $json . "\n");
+  }
 }
 
 // Nome del cookie "ha già votato" dell'evento

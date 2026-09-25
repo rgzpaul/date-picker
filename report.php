@@ -1,10 +1,11 @@
 <?php
 require __DIR__ . '/event.php';
 $event = getEventOrFail();
-$dbFile = eventDbFile($event);
+$eventData = eventLoad($event);
+$closed = $eventData['closed'];
 
-// Legge le date salvate per l'evento
-$data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
+// Voti dell'evento
+$data = $eventData['votes'];
 
 // Raggruppa per data e raccoglie i nomi; i voti "mi adatto" vanno a parte
 $dateGroups = [];
@@ -197,11 +198,18 @@ $adaptiveKeys = array_map('mb_strtolower', $adaptiveNames);
           <span class="ml-3 inline-flex items-center bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded border border-slate-200">
             <i data-lucide="tag" class="w-3 h-3 mr-1.5"></i><?= htmlspecialchars($event) ?>
           </span>
+          <?php if ($closed): ?>
+            <span class="ml-2 inline-flex items-center bg-slate-800 text-white text-xs font-medium px-2.5 py-1 rounded border border-slate-800">
+              <i data-lucide="lock" class="w-3 h-3 mr-1.5"></i>Chiuso
+            </span>
+          <?php endif; ?>
         </h1>
 
-        <a href="index.php?event=<?= urlencode($event) ?>" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
-          <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Indietro
-        </a>
+        <?php if (!$closed): ?>
+          <a href="index.php?event=<?= urlencode($event) ?>" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-md text-sm font-medium inline-flex items-center justify-center w-full sm:w-auto border border-slate-200">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Indietro
+          </a>
+        <?php endif; ?>
       </div>
 
       <?php if (!empty($counter)): ?>
@@ -259,16 +267,18 @@ $adaptiveKeys = array_map('mb_strtolower', $adaptiveNames);
         <?php endif; ?>
       <?php else: ?>
         <div class="bg-slate-50 border border-slate-200 p-6 rounded-md text-center">
-          <p class="text-slate-500 text-sm mb-4">Nessun dato disponibile. Non ci sono ancora date selezionate.</p>
+          <p class="text-slate-500 text-sm mb-4 last:mb-0">Nessun dato disponibile. Non ci sono<?= $closed ? '' : ' ancora' ?> date selezionate.</p>
           <?php if (!empty($adaptiveNames)): ?>
-            <p class="text-slate-400 text-xs mb-4 flex items-center justify-center">
+            <p class="text-slate-400 text-xs mb-4 last:mb-0 flex items-center justify-center">
               <i data-lucide="shuffle" class="w-3 h-3 mr-1.5"></i>
               Si adattano alla data più votata: <?= htmlspecialchars(implode(', ', $adaptiveNames)) ?>
             </p>
           <?php endif; ?>
-          <a href="index.php?event=<?= urlencode($event) ?>" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
-            Seleziona date
-          </a>
+          <?php if (!$closed): ?>
+            <a href="index.php?event=<?= urlencode($event) ?>" class="btn inline-block bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
+              Seleziona date
+            </a>
+          <?php endif; ?>
         </div>
       <?php endif; ?>
     </div>

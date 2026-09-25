@@ -1,13 +1,16 @@
 <?php
 require __DIR__ . '/event.php';
 $event = getEventOrFail();
-$dbFile = eventDbFile($event);
+$eventData = eventLoad($event);
 $cookieName = eventCookieName($event);
+
+// Evento chiuso ("closed": true nel JSON): niente voti né modifiche, solo il report
+$closed = $eventData['closed'];
 
 $submittedName = eventSubmittedName($event);
 $alreadySubmitted = $submittedName !== null;
-$isChanging = $alreadySubmitted && isset($_GET['modifica']);
-$showForm = !$alreadySubmitted || $isChanging;
+$isChanging = !$closed && $alreadySubmitted && isset($_GET['modifica']);
+$showForm = !$closed && (!$alreadySubmitted || $isChanging);
 // In modifica l'identità è fissata dal cookie: il nome non si cambia
 $nomeLocked = $isChanging;
 
@@ -19,7 +22,7 @@ $maxDates = 6; // Maximum number of dates selectable - change this value to adju
 // sovrascrive il voto precedente: è così che si cambia voto, anche da
 // un device senza cookie. In modifica, l'invio senza alcuna data
 // ritira il voto: le proprie voci vengono eliminate e il cookie rimosso.
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$closed) {
   $dates = $_POST['dates'] ?? '';
   $dates = is_string($dates) ? $dates : '';
   $nome = trim($_POST['nome'] ?? '');
@@ -35,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $datesArray = array_slice($datesArray, -$maxDates);
     }
 
-    $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
+    $data = $eventData['votes'];
 
     // Rimuove l'eventuale voto esistente con lo stesso nome
     $nomeNormalized = mb_strtolower($nome);
@@ -50,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data[] = ['date' => trim($date), 'name' => $nome];
       }
     }
-    file_put_contents($dbFile, json_encode($data));
+    $eventData['votes'] = $data;
+    eventSave($event, $eventData);
 
     if ($isWithdrawal) {
       // Torna allo stato "non hai votato"
@@ -71,9 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $existingDates = [];
 $wasAdaptive = false;
 if ($isChanging) {
-  $data = file_exists($dbFile) ? (json_decode(file_get_contents($dbFile), true) ?? []) : [];
   $target = mb_strtolower($submittedName);
-  foreach ($data as $entry) {
+  foreach ($eventData['votes'] as $entry) {
     if (mb_strtolower($entry['name']) !== $target) {
       continue;
     }
@@ -179,7 +182,9 @@ if ($isChanging) {
 <body class="min-h-[100dvh] flex items-center justify-center p-4 bg-slate-50">
   <div class="card bg-white p-8 rounded-lg w-full max-w-md">
     <h1 class="text-xl font-semibold mb-2 text-slate-800 flex items-center justify-center">
-      <?php if ($isChanging): ?>
+      <?php if ($closed): ?>
+        <i data-lucide="lock" class="w-5 h-5 mr-2 text-slate-500"></i>Evento chiuso
+      <?php elseif ($isChanging): ?>
         <i data-lucide="pencil" class="w-5 h-5 mr-2 text-slate-500"></i>Modifica il tuo voto
       <?php elseif ($alreadySubmitted): ?>
         <i data-lucide="check-circle" class="w-5 h-5 mr-2 text-slate-500"></i>Hai già votato
@@ -194,7 +199,15 @@ if ($isChanging) {
       </span>
     </div>
 
-    <?php if ($showForm): ?>
+    <?php if ($closed): ?>
+      <div class="bg-slate-50 border border-slate-200 p-4 mb-4 rounded-md">
+        <p class="text-slate-600 text-sm">Le votazioni per questo evento sono chiuse. Puoi consultare il report con i risultati.</p>
+      </div>
+
+      <a href="report.php?event=<?= urlencode($event) ?>" class="btn block text-center w-full bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-md text-sm font-medium">
+        <i data-lucide="bar-chart-2" class="w-4 h-4 mr-2 inline"></i> Vai al report
+      </a>
+    <?php elseif ($showForm): ?>
       <form method="POST" class="space-y-4">
         <div>
           <label for="nome" class="block text-sm font-medium text-slate-700 mb-1">Il tuo nome</label>
@@ -241,7 +254,7 @@ if ($isChanging) {
       </div>
     <?php endif; ?>
 
-    <?php if (!$alreadySubmitted): ?>
+    <?php if (!$closed && !$alreadySubmitted): ?>
       <div class="mt-6 text-center text-slate-400 text-xs">
         <p>Seleziona le date che preferisci prima che mi incazzo sul serio.</p>
       </div>
